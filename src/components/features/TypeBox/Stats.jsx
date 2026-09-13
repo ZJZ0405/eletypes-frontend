@@ -15,6 +15,7 @@ import Leaderboard from "../Leaderboard/Leaderboard";
 import { addScore } from "../../../services/scoreHistory";
 import { evaluateBadges } from "../../../services/badges";
 import { useLocale } from "../../../context/LocaleContext";
+import { RANDOM_WORD_SOURCE } from "../../../constants/Constants";
 const Stats = ({
   status,
   wpm,
@@ -36,6 +37,7 @@ const Stats = ({
   sessionSeed,
   isCustomMode,
   customListName,
+  wordSource,
 }) => {
   const { t } = useLocale();
   const statsRef = useRef(null);
@@ -163,10 +165,12 @@ const Stats = ({
   const [newBadges, setNewBadges] = useState([]);
   useEffect(() => {
     if (status === "finished" && !historySaved) {
-      // Custom-words runs aren't recorded: scores depend on the user's chosen
-      // words so they aren't comparable to random-mode history/badges/etc.
       // Leaderboard submission is also blocked downstream in Leaderboard.jsx.
-      if (finalWpm > 0 && !isCustomMode) {
+      if (
+        finalWpm > 0 &&
+        !isCustomMode &&
+        wordSource === RANDOM_WORD_SOURCE
+      ) {
         addScore({ wpm: finalWpm, accuracy, ...modeParams });
         const earned = evaluateBadges({ wpm: finalWpm, accuracy, ...modeParams });
         if (earned.length > 0) {
@@ -403,6 +407,7 @@ const Stats = ({
               sessionSeed={sessionSeed}
               isCustomMode={isCustomMode}
               customListName={customListName}
+              wordSource={wordSource}
             />
           </section>
         </div>

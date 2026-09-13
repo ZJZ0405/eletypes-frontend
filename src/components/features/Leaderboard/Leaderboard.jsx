@@ -11,8 +11,12 @@ import { useLocale } from "../../../context/LocaleContext";
 import { markSubmitted } from "../../../services/badges";
 import ShareButton from "../Share/ShareButton";
 import { createChallengeUrl } from "../../../services/challengeLink";
+import {
+  CODING_WORD_SOURCE,
+  RANDOM_WORD_SOURCE,
+} from "../../../constants/Constants";
 
-const ChallengeBtn = ({ language, difficulty, duration, numberAddon, symbolAddon, sessionSeed, theme, t }) => {
+const ChallengeBtn = ({ language, difficulty, duration, numberAddon, symbolAddon, sessionSeed, wordSource, theme, t }) => {
   const [copied, setCopied] = useState(false);
   const handleChallenge = () => {
     const { url } = createChallengeUrl({
@@ -22,6 +26,7 @@ const ChallengeBtn = ({ language, difficulty, duration, numberAddon, symbolAddon
       timer: duration,
       numberAddOn: numberAddon,
       symbolAddOn: symbolAddon,
+      wordSource,
     });
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -63,6 +68,7 @@ const Leaderboard = ({
   sessionSeed,
   isCustomMode,
   customListName,
+  wordSource,
 }) => {
   const { t } = useLocale();
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -73,6 +79,8 @@ const Leaderboard = ({
   const [name, setName] = useState(() => getUserName());
   const [isEditingName, setIsEditingName] = useState(false);
   const [activeTab, setActiveTab] = useState(TAB_LEADERBOARD);
+  const isCodingMode = !isCustomMode && wordSource === CODING_WORD_SOURCE;
+  const isRankedMode = !isCustomMode && wordSource === RANDOM_WORD_SOURCE;
 
   const modeParams = {
     language,
@@ -83,21 +91,21 @@ const Leaderboard = ({
   };
 
   const loadLeaderboard = useCallback(async () => {
+    if (!isRankedMode) {
+      setLeaderboardData([]);
+      setPlayerRank(null);
+      setLoading(false);
+      return;
+    }
     const data = await fetchLeaderboard(modeParams);
     setLeaderboardData(data);
-    // Skip rank fetch in custom mode — the user's score doesn't belong on
-    // the normal-mode leaderboard so any rank shown would be misleading.
-    if (!isCustomMode) {
-      const rank = await fetchPlayerRank({ wpm, accuracy, ...modeParams });
-      setPlayerRank(rank);
-    } else {
-      setPlayerRank(null);
-    }
+    const rank = await fetchPlayerRank({ wpm, accuracy, ...modeParams });
+    setPlayerRank(rank);
     setLoading(false);
-  }, [wpm, language, difficulty, duration, numberAddon, symbolAddon, isCustomMode]);
+  }, [wpm, language, difficulty, duration, numberAddon, symbolAddon, isRankedMode]);
 
   const handleSubmit = async () => {
-    if (submitted) return;
+    if (submitted || !isRankedMode) return;
     const displayName = name.trim() || "Anonymous";
     setUserName(displayName);
     setName(displayName);
@@ -121,12 +129,12 @@ const Leaderboard = ({
   };
 
   useEffect(() => {
-    if (!supabase) {
+    if (!supabase || !isRankedMode) {
       setLoading(false);
       return;
     }
     loadLeaderboard();
-  }, [loadLeaderboard]);
+  }, [loadLeaderboard, isRankedMode]);
 
   const handleNameChange = (e) => {
     const val = e.target.value.slice(0, 20);
@@ -153,6 +161,12 @@ const Leaderboard = ({
     // random-mode difficulty/addons (those don't apply to custom runs).
     if (isCustomMode) {
       const parts = [lang, `custom: ${customListName || "—"}`, `${duration}s`];
+      return parts.join(" · ");
+    }
+    if (isCodingMode) {
+      const parts = [lang, t("word_source_coding_label"), `${duration}s`];
+      if (numberAddon) parts.push("+num");
+      if (symbolAddon) parts.push("+sym");
       return parts.join(" · ");
     }
     const parts = [lang, difficulty, `${duration}s`];
@@ -231,7 +245,22 @@ const Leaderboard = ({
               {t("leaderboard_custom_notice", customListName || "")}
             </div>
           )}
-          {!isCustomMode && !submitted && supabase && (
+          {isCodingMode && (
+            <div
+              style={{
+                marginBottom: "12px",
+                padding: "8px 12px",
+                border: `1px solid ${theme.textTypeBox}40`,
+                borderRadius: "4px",
+                color: theme.textTypeBox,
+                fontSize: "13px",
+                lineHeight: 1.5,
+              }}
+            >
+              {t("leaderboard_coding_notice")}
+            </div>
+          )}
+          {isRankedMode && !submitted && supabase && (
             <div
               style={{
                 display: "flex",
@@ -297,6 +326,7 @@ const Leaderboard = ({
                 numberAddon={numberAddon}
                 symbolAddon={symbolAddon}
                 sessionSeed={sessionSeed}
+                wordSource={wordSource}
                 theme={theme}
                 t={t}
               />
@@ -309,7 +339,7 @@ const Leaderboard = ({
               URLs no longer carry the custom list — the recipient would run
               the built-in random words for the same seed, which doesn't
               match what the sender actually typed and would be misleading. */}
-          {(isCustomMode || submitted || !supabase) && (
+          {(!isRankedMode || submitted || !supabase) && (
             <div style={{ display: "flex", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
               <ShareButton targetRef={statsRef} theme={theme} />
               {!isCustomMode && (
@@ -320,6 +350,7 @@ const Leaderboard = ({
                   numberAddon={numberAddon}
                   symbolAddon={symbolAddon}
                   sessionSeed={sessionSeed}
+                  wordSource={wordSource}
                   theme={theme}
                   t={t}
                 />
@@ -327,7 +358,7 @@ const Leaderboard = ({
             </div>
           )}
 
-          {!supabase ? (
+          {!isRankedMode ? null : !supabase ? (
             <p style={{ color: theme.textTypeBox, fontSize: "14px" }}>
               {t("leaderboard_unavailable")}
             </p>
@@ -420,9 +451,7 @@ const Leaderboard = ({
 
       {/* History tab */}
       {activeTab === TAB_HISTORY && (
-        isCustomMode ? (
-          // Custom-words runs aren't recorded — showing random-mode history
-          // here would be misleading next to a custom result.
+        !isRankedMode ? (
           <div
             style={{
               padding: "8px 12px",
@@ -433,7 +462,9 @@ const Leaderboard = ({
               lineHeight: 1.5,
             }}
           >
-            {t("history_custom_notice", customListName || "")}
+            {isCodingMode
+              ? t("history_coding_notice")
+              : t("history_custom_notice", customListName || "")}
           </div>
         ) : (
           <ScoreHistoryPanel
