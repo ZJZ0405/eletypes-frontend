@@ -23,11 +23,19 @@ export const createChallengeUrl = ({ seed, language, difficulty, timer, numberAd
   // simply by sharing a URL — we have no way to moderate it. Built-in word
   // sources are deterministic and known-safe, so only the seed + standard
   // mode params travel.
-  return { url: `${window.location.origin}?${params.toString()}`, seed };
+  return {
+    url: `${window.location.origin}${window.location.pathname}#/?${params.toString()}`,
+    seed,
+  };
 };
 
 export const parseChallengeParams = () => {
-  const params = new URLSearchParams(window.location.search);
+  const hashQueryIndex = window.location.hash.indexOf("?");
+  const hashParams = hashQueryIndex === -1
+    ? new URLSearchParams()
+    : new URLSearchParams(window.location.hash.slice(hashQueryIndex + 1));
+  const legacyParams = new URLSearchParams(window.location.search);
+  const params = hashParams.has(PARAM_KEYS.seed) ? hashParams : legacyParams;
   const seed = params.get(PARAM_KEYS.seed);
   if (!seed) return null;
 
@@ -49,5 +57,5 @@ export const parseChallengeParams = () => {
 };
 
 export const clearChallengeParams = () => {
-  window.history.replaceState({}, "", window.location.pathname);
+  window.history.replaceState({}, "", `${window.location.pathname}#/`);
 };
