@@ -8,6 +8,7 @@ import {
 import {
   parseCustomWordsText,
   resolveActiveCustomList,
+  CUSTOM_WORDS_ACTIVE_KEY,
 } from "./scripts/customWords";
 import { GlobalStyles } from "./style/global";
 import { LocaleProvider } from "./context/LocaleContext";
@@ -22,6 +23,7 @@ import {
   GAME_MODE,
   GAME_MODE_DEFAULT,
   GAME_MODE_SENTENCE,
+  WORD_SOURCE_KEY,
 } from "./constants/Constants";
 import useLocalPersistState from "./hooks/useLocalPersistState";
 import {
@@ -50,6 +52,8 @@ const initialChallenge = (() => {
     window.localStorage.setItem("language", JSON.stringify(params.language));
     window.localStorage.setItem("number", JSON.stringify(params.numberAddOn));
     window.localStorage.setItem("symbol", JSON.stringify(params.symbolAddOn));
+    window.localStorage.setItem(WORD_SOURCE_KEY, JSON.stringify(params.wordSource));
+    window.localStorage.removeItem(CUSTOM_WORDS_ACTIVE_KEY);
     // Force word mode
     window.localStorage.setItem("game-mode", JSON.stringify(GAME_MODE_DEFAULT));
     window.localStorage.setItem("IsInWordsCardMode", JSON.stringify(false));

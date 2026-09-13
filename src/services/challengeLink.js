@@ -1,4 +1,7 @@
-import { generateSeed } from "../scripts/seedUtils";
+import {
+  CODING_WORD_SOURCE,
+  RANDOM_WORD_SOURCE,
+} from "../constants/Constants";
 
 const PARAM_KEYS = {
   seed: "s",
@@ -7,9 +10,10 @@ const PARAM_KEYS = {
   timer: "t",
   number: "n",
   symbol: "sym",
+  wordSource: "ws",
 };
 
-export const createChallengeUrl = ({ seed, language, difficulty, timer, numberAddOn, symbolAddOn }) => {
+export const createChallengeUrl = ({ seed, language, difficulty, timer, numberAddOn, symbolAddOn, wordSource }) => {
   const params = new URLSearchParams();
   params.set(PARAM_KEYS.seed, seed);
   params.set(PARAM_KEYS.language, language === "CHINESE_MODE" ? "cn" : "en");
@@ -17,6 +21,9 @@ export const createChallengeUrl = ({ seed, language, difficulty, timer, numberAd
   params.set(PARAM_KEYS.timer, String(timer));
   if (numberAddOn) params.set(PARAM_KEYS.number, "1");
   if (symbolAddOn) params.set(PARAM_KEYS.symbol, "1");
+  if (wordSource === CODING_WORD_SOURCE) {
+    params.set(PARAM_KEYS.wordSource, "c");
+  }
   // Challenge URLs no longer embed the active custom word list. Allowing
   // arbitrary user-supplied vocabulary to ride on a link means anyone could
   // seed offensive / spammy / off-topic word sets into other people's tests
@@ -41,6 +48,9 @@ export const parseChallengeParams = () => {
 
   const langParam = params.get(PARAM_KEYS.language);
   const diffParam = params.get(PARAM_KEYS.difficulty);
+  const wordSource = params.get(PARAM_KEYS.wordSource) === "c"
+    ? CODING_WORD_SOURCE
+    : RANDOM_WORD_SOURCE;
 
   // Note: the historical `wl` (word list) param is intentionally ignored
   // here. Old links generated before this change will simply fall back to
@@ -48,11 +58,14 @@ export const parseChallengeParams = () => {
   // they just don't carry custom vocabulary anymore.
   return {
     seed,
-    language: langParam === "cn" ? "CHINESE_MODE" : "ENGLISH_MODE",
+    language: wordSource === CODING_WORD_SOURCE || langParam !== "cn"
+      ? "ENGLISH_MODE"
+      : "CHINESE_MODE",
     difficulty: diffParam === "h" ? "hard" : "normal",
     timer: parseInt(params.get(PARAM_KEYS.timer) || "60", 10),
     numberAddOn: params.get(PARAM_KEYS.number) === "1",
     symbolAddOn: params.get(PARAM_KEYS.symbol) === "1",
+    wordSource,
   };
 };
 
