@@ -13,6 +13,7 @@ import ColorLensIcon from "@mui/icons-material/ColorLens";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import { Link as RouterLink } from "react-router-dom";
 import { ENGLISH_MODE, CHINESE_MODE } from "../../constants/Constants";
 import {
   parseCustomWordsText,
@@ -92,6 +93,16 @@ const renderNewsHighlighted = (text, highlights, theme) => {
         >
           {label}
         </a>
+      );
+    } else if (matchedHighlight.link?.startsWith("/")) {
+      parts.push(
+        <RouterLink
+          key={key++}
+          to={matchedHighlight.link}
+          style={{ color: theme.stats, textDecoration: "underline", fontWeight: 600 }}
+        >
+          {label}
+        </RouterLink>
       );
     } else if (matchedHighlight.link) {
       parts.push(
@@ -608,7 +619,7 @@ const ProfileModal = ({
                 🚧 {t("keyboard_lab_under_dev")}
               </span>
               <div style={{ marginTop: "8px" }}>
-                <a href="/keyboardlab" style={{
+                <RouterLink to="/keyboardlab" style={{
                   display: "inline-block",
                   padding: "8px 20px", borderRadius: "6px",
                   background: `linear-gradient(135deg, #6a4c93, #4a90d9)`,
@@ -616,7 +627,7 @@ const ProfileModal = ({
                   textDecoration: "none",
                 }}>
                   → {t("keyboard_lab")}
-                </a>
+                </RouterLink>
               </div>
             </div>
 

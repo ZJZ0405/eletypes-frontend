@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardAltIcon from "@mui/icons-material/KeyboardAlt";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
 import { Tooltip } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { getUserName, getUserTag } from "../../services/userIdentity";
 import { getRank, getBestEffectiveWpm } from "../../services/badges";
 import { useLocale } from "../../context/LocaleContext";
@@ -150,6 +151,13 @@ const renderHighlighted = (text, highlights, theme) => {
           {label}
         </a>
       );
+    } else if (matchedHighlight.link?.startsWith("/")) {
+      parts.push(
+        <RouterLink key={key++} to={matchedHighlight.link}
+          style={{ color: theme.stats, textDecoration: "underline", fontWeight: 600 }}>
+          {label}
+        </RouterLink>
+      );
     } else if (matchedHighlight.link) {
       parts.push(
         <a key={key++} href={matchedHighlight.link} target="_blank" rel="noopener noreferrer"
@@ -279,7 +287,7 @@ const Logo = ({
           <div className="profile-area">
             {/* Keyboard Lab link */}
             <Tooltip title={t("keyboard_lab") || "Keyboard Lab"} placement="bottom">
-              <a href="/keyboardlab" className="profile-btn" style={{ position: "relative", textDecoration: "none", marginRight: "12px" }}>
+              <RouterLink to="/keyboardlab" className="profile-btn" style={{ position: "relative", textDecoration: "none", marginRight: "12px" }}>
                 <span className="profile-bracket">[</span>
                 <DesignServicesIcon style={{ fontSize: "16px" }} />
                 <span className="profile-bracket">]</span>
@@ -290,7 +298,7 @@ const Logo = ({
                   padding: "1px 3px", borderRadius: "3px",
                   background: "#4a90d9", color: "#fff",
                 }}>beta</span>
-              </a>
+              </RouterLink>
             </Tooltip>
 
             {/* Name card — slides in/out from the right */}
