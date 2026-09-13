@@ -49,6 +49,9 @@ import {
   PACING_PULSE,
   NUMBER_ADDON_KEY,
   SYMBOL_ADDON_KEY,
+  RANDOM_WORD_SOURCE,
+  CODING_WORD_SOURCE,
+  WORD_SOURCE_KEY,
 } from "../../../constants/Constants";
 import { SOUND_MAP } from "../sound/sound";
 import SocialLinksModal from "../../common/SocialLinksModal";
@@ -109,6 +112,14 @@ const TypeBox = ({
     ENGLISH_MODE,
     "language"
   );
+
+  const [wordSource, setWordSource] = useLocalPersistState(
+    RANDOM_WORD_SOURCE,
+    WORD_SOURCE_KEY
+  );
+  const activeWordSource = wordSource === CODING_WORD_SOURCE
+    ? CODING_WORD_SOURCE
+    : RANDOM_WORD_SOURCE;
 
   // local persist words add on for number
   const [numberAddOn, setNumberAddOn] = useLocalPersistState(
@@ -179,7 +190,9 @@ const TypeBox = ({
   // setting for this test. The list's own language drives both word generation
   // and rendering. Built-in difficulty/number/symbol add-ons are skipped — the
   // user already curated the exact words they want.
-  const effectiveLanguage = customWordsOverride?.language ?? language;
+  const effectiveLanguage = customWordsOverride?.language ?? (
+    activeWordSource === CODING_WORD_SOURCE ? ENGLISH_MODE : language
+  );
 
   // set up words state
   const [wordsDict, setWordsDict] = useState(() => {
@@ -198,7 +211,8 @@ const TypeBox = ({
         ENGLISH_MODE,
         numberAddOn,
         symbolAddOn,
-        rng
+        rng,
+        activeWordSource
       );
     }
     if (effectiveLanguage === CHINESE_MODE) {
@@ -286,12 +300,17 @@ const TypeBox = ({
         );
         setWordsDict((currentArray) => [...currentArray, ...generatedCustom]);
       } else if (effectiveLanguage === ENGLISH_MODE) {
+        const extensionRng = sessionSeed
+          ? createRng(`${sessionSeed}:${wordsDict.length}`)
+          : undefined;
         const generatedEng = wordsGenerator(
           DEFAULT_WORDS_COUNT,
           difficulty,
           ENGLISH_MODE,
           numberAddOn,
-          symbolAddOn
+          symbolAddOn,
+          extensionRng,
+          activeWordSource
         );
         setWordsDict((currentArray) => [...currentArray, ...generatedEng]);
       } else if (effectiveLanguage === CHINESE_MODE) {
@@ -348,6 +367,9 @@ const TypeBox = ({
     effectiveLanguage,
     numberAddOn,
     symbolAddOn,
+    activeWordSource,
+    sessionSeed,
+    wordsDict.length,
     customWordsOverride,
   ]);
 
@@ -357,7 +379,9 @@ const TypeBox = ({
     language,
     newNumberAddOn,
     newSymbolAddOn,
-    isRedo
+    isRedo,
+    newWordSource = activeWordSource,
+    useCustomWords = true
   ) => {
     setStatus("waiting");
     if (!isRedo) {
@@ -365,8 +389,12 @@ const TypeBox = ({
       setSessionSeed(newSeed);
       const rng = createRng(newSeed);
       // Custom list locks the language for this test — see effectiveLanguage.
-      const resetLanguage = customWordsOverride?.language ?? language;
-      if (customWordsOverride?.parsed?.length) {
+      const resetLanguage = newWordSource === CODING_WORD_SOURCE
+        ? ENGLISH_MODE
+        : useCustomWords && customWordsOverride?.language
+        ? customWordsOverride.language
+        : language;
+      if (useCustomWords && customWordsOverride?.parsed?.length) {
         setWordsDict(
           customWordsGenerator(
             customWordsOverride.parsed,
@@ -392,7 +420,8 @@ const TypeBox = ({
             resetLanguage,
             newNumberAddOn,
             newSymbolAddOn,
-            rng
+            rng,
+            newWordSource
           )
         );
       }
@@ -403,6 +432,7 @@ const TypeBox = ({
     setCountDown(newCountDown);
     setDifficulty(difficulty);
     setLanguage(language);
+    setWordSource(newWordSource);
     clearInterval(intervalId);
     setWpm(0);
     setRawKeyStrokes(0);
@@ -430,6 +460,22 @@ const TypeBox = ({
     } else {
       firstWordElement?.scrollIntoView();
     }
+  };
+
+  const selectBuiltInSource = (newWordSource) => {
+    window.localStorage.setItem(WORD_SOURCE_KEY, JSON.stringify(newWordSource));
+    setWordSource(newWordSource);
+    if (hasActiveWordList && onClearCustomWords) onClearCustomWords();
+    reset(
+      countDownConstant,
+      difficulty,
+      language,
+      numberAddOn,
+      symbolAddOn,
+      false,
+      newWordSource,
+      false
+    );
   };
 
   const start = () => {
@@ -891,7 +937,10 @@ const TypeBox = ({
   };
 
   const getDifficultyButtonClassName = (buttonDifficulty) => {
-    if (difficulty === buttonDifficulty) {
+    if (
+      activeWordSource === RANDOM_WORD_SOURCE &&
+      difficulty === buttonDifficulty
+    ) {
       return "active-button";
     }
     return "inactive-button";
@@ -1067,24 +1116,41 @@ const TypeBox = ({
               alignItems="center"
               sx={{ "& .MuiIconButton-root": { padding: "6px" } }}
             >
-              {/* Word-source mode buttons: Random ⇄ Custom. Behave like a
-                  two-way toggle — the active one is highlighted, the other
+              {/* Word-source mode buttons: Random, Coding, and Custom. The
+                  active built-in source is highlighted, while custom lists
                   is clickable to switch. Sub-options for the active mode
-                  (normal/hard for random; just the list name for custom)
+                  (normal/hard for built-ins; just the list name for custom)
                   appear after the | separator. */}
               <IconButton
                 onClick={() => {
-                  // No-op if already random; otherwise exit custom mode.
-                  if (hasActiveWordList && onClearCustomWords) onClearCustomWords();
+                  if (activeWordSource !== RANDOM_WORD_SOURCE || hasActiveWordList) {
+                    selectBuiltInSource(RANDOM_WORD_SOURCE);
+                  }
                 }}
               >
                 <Tooltip title={t("word_source_random_tooltip")}>
                   <span
-                    className={!hasActiveWordList ? "active-button" : "inactive-button"}
+                    className={activeWordSource === RANDOM_WORD_SOURCE && !hasActiveWordList ? "active-button" : "inactive-button"}
                     style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
                   >
                     <ShuffleIcon sx={{ fontSize: 16 }} />
                     {t("word_source_random_label")}
+                  </span>
+                </Tooltip>
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  if (activeWordSource !== CODING_WORD_SOURCE || hasActiveWordList) {
+                    selectBuiltInSource(CODING_WORD_SOURCE);
+                  }
+                }}
+              >
+                <Tooltip title={t("word_source_coding_tooltip")}>
+                  <span
+                    className={activeWordSource === CODING_WORD_SOURCE && !hasActiveWordList ? "active-button" : "inactive-button"}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
+                  >
+                    {t("word_source_coding_label")}
                   </span>
                 </Tooltip>
               </IconButton>
@@ -1131,7 +1197,8 @@ const TypeBox = ({
                         language,
                         numberAddOn,
                         symbolAddOn,
-                        false
+                        false,
+                        RANDOM_WORD_SOURCE
                       );
                     }}
                   >
@@ -1155,7 +1222,8 @@ const TypeBox = ({
                         language,
                         numberAddOn,
                         symbolAddOn,
-                        false
+                        false,
+                        RANDOM_WORD_SOURCE
                       );
                     }}
                   >
@@ -1191,7 +1259,8 @@ const TypeBox = ({
                         language,
                         !numberAddOn,
                         symbolAddOn,
-                        false
+                        false,
+                        activeWordSource
                       );
                     }}
                   >
@@ -1209,7 +1278,8 @@ const TypeBox = ({
                         language,
                         numberAddOn,
                         !symbolAddOn,
-                        false
+                        false,
+                        activeWordSource
                       );
                     }}
                   >
@@ -1239,7 +1309,8 @@ const TypeBox = ({
                         ENGLISH_MODE,
                         numberAddOn,
                         symbolAddOn,
-                        false
+                        false,
+                        activeWordSource
                       );
                     }}
                   >
@@ -1257,7 +1328,8 @@ const TypeBox = ({
                         CHINESE_MODE,
                         numberAddOn,
                         symbolAddOn,
-                        false
+                        false,
+                        RANDOM_WORD_SOURCE
                       );
                     }}
                   >
@@ -1452,7 +1524,7 @@ const TypeBox = ({
         <div className="stats">
           <Stats
             status={status}
-            language={language}
+            language={effectiveLanguage}
             wpm={wpm}
             setIncorrectCharsCount={setIncorrectCharsCount}
             incorrectCharsCount={incorrectCharsCount}
@@ -1471,6 +1543,7 @@ const TypeBox = ({
             sessionSeed={sessionSeed}
             isCustomMode={!!customWordsOverride}
             customListName={customWordsOverride?.listName}
+            wordSource={activeWordSource}
           ></Stats>
           {status !== "finished" && renderResetButton()}
         </div>

@@ -96,8 +96,12 @@ export const translations = {
     leaderboard_unavailable: "Leaderboard unavailable.",
     leaderboard_custom_notice:
       "Custom-words run ({0}). Leaderboard submission and local history are skipped for custom lists so they stay comparable across random-mode players. You can still share the result image.",
+    leaderboard_coding_notice:
+      "Coding is a practice-only mode. Scores are unranked and are not submitted to the normal or hard leaderboard. You can still share the result or send a challenge.",
     history_custom_notice:
       "Custom-words runs ({0}) aren't tracked in the random-mode history. The result is still on screen — feel free to share or send as a challenge.",
+    history_coding_notice:
+      "Coding practice scores aren't recorded in local history yet. You can still share this result or send it as a challenge.",
     loading_leaderboard: "Loading leaderboard...",
     loading: "Loading...",
     no_scores_yet: "No scores yet. Be the first!",
@@ -457,6 +461,8 @@ export const translations = {
     custom_words_active_label: "Using custom: {0}",
     word_source_random_label: "random",
     word_source_random_tooltip: "Random words mode",
+    word_source_coding_label: "coding",
+    word_source_coding_tooltip: "Practice practical English programming vocabulary",
     custom_words_menu_empty: "No saved word lists yet",
     custom_words_menu_new: "New word list…",
     custom_words_menu_clear: "Use built-in words",
@@ -565,8 +571,12 @@ export const translations = {
     leaderboard_unavailable: "排行榜不可用。",
     leaderboard_custom_notice:
       "自定义词组成绩（{0}）。为保持与随机模式玩家的可比性，自定义模式不上传排行榜，也不计入本地历史。结果仍然可以分享。",
+    leaderboard_coding_notice:
+      "编程模式仅用于练习，成绩不参与排名，也不会提交到普通或困难排行榜。结果仍可分享或发送挑战。",
     history_custom_notice:
       "自定义词组（{0}）的成绩不计入随机模式的本地历史。当前结果仍在屏幕上，可以随时分享。",
+    history_coding_notice:
+      "编程练习成绩暂不计入本地历史。当前结果仍可分享或发送挑战。",
     loading_leaderboard: "加载排行榜中...",
     loading: "加载中...",
     no_scores_yet: "暂无成绩，成为第一个提交的人！",
@@ -921,6 +931,8 @@ export const translations = {
     custom_words_active_label: "自定义：{0}",
     word_source_random_label: "随机词组",
     word_source_random_tooltip: "随机词组模式",
+    word_source_coding_label: "编程",
+    word_source_coding_tooltip: "练习实用的英文编程词汇",
     custom_words_menu_empty: "暂无保存的词组",
     custom_words_menu_new: "新建词组…",
     custom_words_menu_clear: "改回内置词",
