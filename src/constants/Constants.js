@@ -8,6 +8,9 @@ const DEFAULT_COUNT_DOWN = COUNT_DOWN_60;
 
 const DEFAULT_DIFFICULTY = "normal";
 const HARD_DIFFICULTY = "hard";
+const RANDOM_WORD_SOURCE = "random";
+const CODING_WORD_SOURCE = "coding";
+const WORD_SOURCE_KEY = "word-source";
 const NUMBER_ADDON = "+number";
 const SYMBOL_ADDON = "+symbol";
 const RESTART_BUTTON_TOOLTIP_TITLE = "[Tab] + [Enter] to quickly restart";
@@ -93,6 +96,9 @@ export {
   COUNT_DOWN_INFINITE,
   DEFAULT_DIFFICULTY,
   HARD_DIFFICULTY,
+  RANDOM_WORD_SOURCE,
+  CODING_WORD_SOURCE,
+  WORD_SOURCE_KEY,
   NUMBER_ADDON,
   SYMBOL_ADDON,
   DEFAULT_DIFFICULTY_TOOLTIP_TITLE,

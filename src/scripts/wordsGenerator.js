@@ -3,6 +3,7 @@ import {
   COMMON_WORDS,
   COMMON_CHINESE_WORDS,
   COMMON_CHINESE_IDIOMS_WORDS,
+  COMMON_CODING_WORDS,
 } from "../constants/WordsMostCommon";
 import {
   DEFAULT_DIFFICULTY,
@@ -10,6 +11,8 @@ import {
   ENGLISH_MODE,
   CHINESE_MODE,
   DEFAULT_WORDS_COUNT,
+  RANDOM_WORD_SOURCE,
+  CODING_WORD_SOURCE,
 } from "../constants/Constants";
 import { randomIntFromRange } from "./randomUtils";
 import {
@@ -86,11 +89,15 @@ const wordsGenerator = (
   languageMode,
   numberAddOn,
   symbolAddOn,
-  rng
+  rng,
+  wordSource = RANDOM_WORD_SOURCE
 ) => {
   if (languageMode === ENGLISH_MODE) {
+    const bank = wordSource === CODING_WORD_SOURCE
+      ? COMMON_CODING_WORDS
+      : WORD_BANK_BY_MODE[ENGLISH_MODE][difficulty] || COMMON_WORDS;
     return generateWordsFromBank(
-      WORD_BANK_BY_MODE[ENGLISH_MODE][difficulty],
+      bank,
       wordsCount,
       numberAddOn,
       symbolAddOn,
