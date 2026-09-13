@@ -24,6 +24,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import DesignServicesIcon from "@mui/icons-material/DesignServices";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import EditIcon from "@mui/icons-material/Edit";
+import { useNavigate } from "react-router-dom";
 import { useLocale } from "../../context/LocaleContext";
 import { buildGroupedOptions, findOptionForTheme, isCustomTheme } from "../../style/customThemes";
 
@@ -53,6 +54,7 @@ const FooterMenu = ({
   toggleWordsCardMode,
 }) => {
   const { locale, setLocale, t } = useLocale();
+  const navigate = useNavigate();
   const isSiteInfoDisabled = isMusicMode || isFocusedMode;
   const isSpecialMode = isTrainerMode || isWordsCardMode;
   const groupedThemeOptions = buildGroupedOptions(customThemes, t);
@@ -99,7 +101,7 @@ const FooterMenu = ({
                 {SENTENCE_MODE_LABEL}
               </span>
             </IconButton>
-            <IconButton size="small" onClick={() => window.location.href = "/markdown"}>
+            <IconButton size="small" onClick={() => navigate("/markdown")}>
               <Tooltip title={t("markdown_mode")}>
                 <span className="nav-item">
                   <svg width="20" height="20" viewBox="0 0 208 128" fill="none" style={{ verticalAlign: "middle" }}>
@@ -123,7 +125,7 @@ const FooterMenu = ({
                 </span>
               </Tooltip>
             </IconButton>
-            <IconButton size="small" onClick={() => window.location.href = "/keyboardlab"}>
+            <IconButton size="small" onClick={() => navigate("/keyboardlab")}>
               <Tooltip title="Keyboard Lab">
                 <span className="nav-item" style={{ position: "relative", display: "inline-flex" }}>
                   <DesignServicesIcon fontSize="small" />
